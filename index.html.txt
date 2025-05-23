@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kleine Open World Game - Uitleg</title>
+  <!-- Laad Phaser 3 vanaf CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+  <style>
+    /* Zorg dat het canvas de volledige viewport vult */
+    body { margin: 0; padding: 0; }
+    #game-container { width: 100vw; height: 100vh; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <script>
+    /**
+     * Configuratie van de Phaser-game:
+     * - type: Phaser.AUTO laat Phaser kiezen tussen Canvas of WebGL
+     * - parent: game-container div
+     * - width/height: vullen de viewport
+     * - physics: arcade physics zonder debug
+     * - scene: verwees naar preload, create en update functies
+     */
+    const config = {
+      type: Phaser.AUTO,
+      parent: 'game-container',
+      width: window.innerWidth,
+      height: window.innerHeight,
+      physics: {
+        default: 'arcade',
+        arcade: { debug: false }
+      },
+      scene: {
+        preload: preload,
+        create: create,
+        update: update
+      }
+    };
+
+    // Tile- en wereldparameters
+    const TILE_SIZE = 32;
+    const MAP_WIDTH = 50;
+    const MAP_HEIGHT = 50;
+
+    // Variabelen voor besturing, speler en camera
+    let cursors;
+    let player;
+    let camera;
+
+    // Maak de game aan met bovenstaande config
+    const game = new Phaser.Game(config);
+
+    /**
+     * preload(): laad assets vooraf.
+     * In deze minimalistische demo gebruiken we geen externe afbeeldingen,
+     * we tekenen alles met Graphics.
+     */
+    function preload() {
+      // Hier kun je spritesheets, tilemaps of geluiden laden
+      // this.load.image('speler', 'assets/player.png');
+    }
+
+    /**
+     * create(): initialiseert de wereld, speler en input.
+     */
+    function create() {
+      // Maak groep voor alle tegels
+      this.tileGroup = this.add.group();
+
+      // Genereer een grid met gekleurde vakjes
+      for (let y = 0; y < MAP_HEIGHT; y++) {
+        for (let x = 0; x < MAP_WIDTH; x++) {
+          // Kies een willekeurige groentint voor variatie
+          const kleur = Phaser.Display.Color.GetColor(
+            50 + Phaser.Math.Between(0, 50),
+            150 + Phaser.Math.Between(0, 50),
+            50 + Phaser.Math.Between(0, 50)
+          );
+          // Teken een vierkant (rectangle)
+          const tile = this.add.rectangle(
+            x * TILE_SIZE + TILE_SIZE / 2,
+            y * TILE_SIZE + TILE_SIZE / 2,
+            TILE_SIZE,
+            TILE_SIZE,
+            kleur
+          ).setOrigin(0.5);
+          this.tileGroup.add(tile);
+        }
+      }
+
+      // Creeër de speler als een blauw vierkant
+      player = this.add.rectangle(
+        (MAP_WIDTH * TILE_SIZE) / 2,
+        (MAP_HEIGHT * TILE_SIZE) / 2,
+        TILE_SIZE * 0.8,
+        TILE_SIZE * 0.8,
+        0x0000ff
+      );
+      // Maak fysica erop van toepassing
+      this.physics.add.existing(player);
+      player.body.setCollideWorldBounds(true);
+
+      // Camera volgt de speler, met grenzen op de wereldgrootte
+      camera = this.cameras.main;
+      camera.setBounds(0, 0, MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
+      camera.startFollow(player);
+
+      // Input: pijltjestoetsen
+      cursors = this.input.keyboard.createCursorKeys();
+    }
+
+    /**
+     * update(): wordt elke frame aangeroepen,
+     * hier verwerk je de besturing en beweging.
+     */
+    function update() {
+      const snelheid = 200; // pixels per seconde
+      player.body.setVelocity(0);
+
+      // Links/rechts beweging
+      if (cursors.left.isDown) {
+        player.body.setVelocityX(-snelheid);
+      } else if (cursors.right.isDown) {
+        player.body.setVelocityX(snelheid);
+      }
+      // Omhoog/omlaag beweging
+      if (cursors.up.isDown) {
+        player.body.setVelocityY(-snelheid);
+      } else if (cursors.down.isDown) {
+        player.body.setVelocityY(snelheid);
+      }
+    }
+  </script>
+
+  <!--
+    Uitleg per onderdeel:
+    1. Config: bepaalt canvas, physics en scene callbacks.
+    2. preload: laad assets (hier leeg, want we tekenen zelf).
+    3. create: bouw wereld op met vakjes en speler, zet camera en input.
+    4. update: beweeg speler op basis van input.
+    5. Publicatie: sla dit bestand op als index.html en host via GitHub Pages, Netlify, of Vercel.
+  -->
+</body>
+</html>
